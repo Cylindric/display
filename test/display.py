@@ -51,6 +51,15 @@ try:
     epd.display(epd.getbuffer(Himage))
     time.sleep(2)
 
+    # FRAME 2
+    Himage = Image.new('1', (epd.width, epd.height), 255)  # 255: clear the frame
+    draw = ImageDraw.Draw(Himage)
+    draw.text(cursor, 'everyone', font = font_glossy, fill = 0)
+    Himage = Himage.transpose(Image.ROTATE_180)
+    epd.display(epd.getbuffer(Himage))
+    time.sleep(2)
+
+
     logging.info("Clear...")
     epd.init()
     epd.Clear()

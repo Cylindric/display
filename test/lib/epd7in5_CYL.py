@@ -1,12 +1,12 @@
 # *****************************************************************************
-# * | File        :	  epd7in5.py
-# * | Author      :   Waveshare team
+# * | File        :	  epd7in5_CYL.py
+# * | Author      :   Waveshare team, Emanuele Sabato, Mark Hanford
 # * | Function    :   Electronic paper driver
 # * | Info        :
 # *----------------
 # * | This version:   V4.0-CYL
 # * | Date        :   2023-03-13
-# # | Info        :   python demo
+# # | Info        :   Modified from python demo for partial-refresh
 # -----------------------------------------------------------------------------
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documnetation files (the "Software"), to deal
@@ -35,9 +35,106 @@ from . import epdconfig
 EPD_WIDTH       = 800
 EPD_HEIGHT      = 480
 
-logger = logging.getLogger(__name__)
-
 class EPD:
+
+    lut_vcom0 = [ 
+    0x00, 0x17, 0x00, 0x00, 0x00, 0x02,        
+    0x00, 0x17, 0x17, 0x00, 0x00, 0x02,        
+    0x00, 0x0A, 0x01, 0x00, 0x00, 0x01,        
+    0x00, 0x0E, 0x0E, 0x00, 0x00, 0x02,        
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,        
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,        
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+    lut_ww = [
+    0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+    0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+    0x40, 0x0A, 0x01, 0x00, 0x00, 0x01,
+    0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+    lut_bw = [
+    0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+    0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+    0x40, 0x0A, 0x01, 0x00, 0x00, 0x01,
+    0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+    lut_wb = [
+    0x80, 0x17, 0x00, 0x00, 0x00, 0x02,
+    0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+    0x80, 0x0A, 0x01, 0x00, 0x00, 0x01,
+    0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+    lut_bb = [
+    0x80, 0x17, 0x00, 0x00, 0x00, 0x02,
+    0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+    0x80, 0x0A, 0x01, 0x00, 0x00, 0x01,
+    0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+    
+    #-----------PARTIAL REFRESH HOMEMADE -----------------------------------------------------
+    EPD_4IN2_Partial_lut_vcom1 =[
+    0x00, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    ]
+
+    EPD_4IN2_Partial_lut_ww1 =[
+    0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+
+    EPD_4IN2_Partial_lut_bw1 =[
+    0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]
+
+    EPD_4IN2_Partial_lut_wb1 =[
+    0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,    
+    ]    
+
+    EPD_4IN2_Partial_lut_bb1 =[
+    0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,    
+    ]    
+    #--------------------------------------------------------------------------------------------
+    
     def __init__(self):
         self.reset_pin = epdconfig.RST_PIN
         self.dc_pin = epdconfig.DC_PIN
@@ -45,69 +142,15 @@ class EPD:
         self.cs_pin = epdconfig.CS_PIN
         self.width = EPD_WIDTH
         self.height = EPD_HEIGHT
-    
-    Voltage_Frame_7IN5_V2 = [
-	0x6, 0x3F, 0x3F, 0x11, 0x24, 0x7, 0x17,
-    ]
-
-    LUT_VCOM_7IN5_V2 = [	
-        0x0,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x0,	0xF,	0x1,	0xF,	0x1,	0x2,	
-        0x0,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-    ]	
-
-    LUT_WW_7IN5_V2 = [
-        0x10,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-        0x20,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-    ]
-
-    LUT_BW_7IN5_V2 = [	
-        0x10,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-        0x20,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-    ]
-
-    LUT_WB_7IN5_V2 = [
-        0x80,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-        0x40,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-    ]
-
-    LUT_BB_7IN5_V2 = [
-        0x80,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-        0x40,	0xF,	0xF,	0x0,	0x0,	0x1,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-        0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-    ]
-
+  
     # Hardware reset
     def reset(self):
         epdconfig.digital_write(self.reset_pin, 1)
-        epdconfig.delay_ms(20) 
+        epdconfig.delay_ms(200) 
         epdconfig.digital_write(self.reset_pin, 0)
         epdconfig.delay_ms(2)
         epdconfig.digital_write(self.reset_pin, 1)
-        epdconfig.delay_ms(20)   
+        epdconfig.delay_ms(200)   
 
     def send_command(self, command):
         epdconfig.digital_write(self.dc_pin, 0)
@@ -120,96 +163,88 @@ class EPD:
         epdconfig.digital_write(self.cs_pin, 0)
         epdconfig.spi_writebyte([data])
         epdconfig.digital_write(self.cs_pin, 1)
-
-    def send_data2(self, data):
-        epdconfig.digital_write(self.dc_pin, 1)
-        epdconfig.digital_write(self.cs_pin, 0)
-        epdconfig.spi_writebyte2(data)
-        epdconfig.digital_write(self.cs_pin, 1)
-
+        
     def ReadBusy(self):
-        logger.debug("e-Paper busy")
+        logging.debug("e-Paper busy")
         self.send_command(0x71)
         busy = epdconfig.digital_read(self.busy_pin)
         while(busy == 0):
             self.send_command(0x71)
             busy = epdconfig.digital_read(self.busy_pin)
-        epdconfig.delay_ms(20)
-        logger.debug("e-Paper busy release")
+        epdconfig.delay_ms(200)
+
+    def set_lut(self):
+        self.send_command(0x20)               # vcom
+        for count in range(0, 44):
+            self.send_data(self.lut_vcom0[count])
+            
+        self.send_command(0x21)         # ww --
+        for count in range(0, 42):
+            self.send_data(self.lut_ww[count])
+            
+        self.send_command(0x22)         # bw r
+        for count in range(0, 42):
+            self.send_data(self.lut_bw[count])
+            
+        self.send_command(0x23)         # wb w
+        for count in range(0, 42):
+            self.send_data(self.lut_bb[count])
+            
+        self.send_command(0x24)         # bb b
+        for count in range(0, 42):
+            self.send_data(self.lut_wb[count])
         
-    def SetLut(self, lut_vcom, lut_ww, lut_bw, lut_wb, lut_bb):
-        self.send_command(0x20)
-        for count in range(0, 42):
-            self.send_data(lut_vcom[count])
+    def Partial_SetLut(self):
+        self.send_command(0x20);
+        for count in range(0, 44):	     
+            self.send_data(self.EPD_4IN2_Partial_lut_vcom1[count])
 
-        self.send_command(0x21)
-        for count in range(0, 42):
-            self.send_data(lut_ww[count])
+        self.send_command(0x21);
+        for count in range(0, 42):	     
+            self.send_data(self.EPD_4IN2_Partial_lut_ww1[count])
+        
+        self.send_command(0x22);
+        for count in range(0, 42):     
+            self.send_data(self.EPD_4IN2_Partial_lut_bw1[count])
 
-        self.send_command(0x22)
-        for count in range(0, 42):
-            self.send_data(lut_bw[count])
+        self.send_command(0x23);
+        for count in range(0, 42):	     
+            self.send_data(self.EPD_4IN2_Partial_lut_wb1[count])
 
-        self.send_command(0x23)
-        for count in range(0, 42):
-            self.send_data(lut_wb[count])
-
-        self.send_command(0x24)
-        for count in range(0, 42):
-            self.send_data(lut_bb[count])
-
+        self.send_command(0x24);
+        for count in range(0, 42):	     
+            self.send_data(self.EPD_4IN2_Partial_lut_bb1[count])        
+        
     def init(self):
         if (epdconfig.module_init() != 0):
             return -1
         # EPD hardware init start
         self.reset()
         
-        # self.send_command(0x06)     # btst
-        # self.send_data(0x17)
-        # self.send_data(0x17)
-        # self.send_data(0x28)        # If an exception is displayed, try using 0x38
-        # self.send_data(0x17)
-        
-        # self.send_command(0x01)   #POWER SETTING
-        # self.send_data(0x07)
-        # self.send_data(0x07)      #VGH=20V,VGL=-20V
-        # self.send_data(0x3f)		#VDH=15V
-        # self.send_data(0x3f)		#VDL=-15V
-
-        self.send_command(0x01)     # power setting
-        self.send_data(0x17)        # 1-0=11: internal power
-        self.send_data(self.Voltage_Frame_7IN5_V2[6])   # VGH&VGL
-        self.send_data(self.Voltage_Frame_7IN5_V2[1])   # VSH
-        self.send_data(self.Voltage_Frame_7IN5_V2[2])   # VSL
-        self.send_data(self.Voltage_Frame_7IN5_V2[3])   # VSHR
-        
-        self.send_command(0x82)     # VCOM DC Setting
-        self.send_data(self.Voltage_Frame_7IN5_V2[4])   # VCOM
-
-        self.send_command(0x06)     # Booster Setting
-        self.send_data(0x27)
-        self.send_data(0x27)
-        self.send_data(0x2F)
-        self.send_data(0x17)
-        
-        self.send_command(0x30)     # OSC Setting
-        self.send_data(self.Voltage_Frame_7IN5_V2[0])   # 3C=50Hz, 3A=100HZ
+        self.send_command(0x01)     # POWER SETTING
+        self.send_data(0x07)        # VSR_EN=1, VS_EN=1, VG_EN=1
+        self.send_data(0x07)        # VGH=20V,VGL=-20V
+        self.send_data(0x3f)		# VDH=15V
+        self.send_data(0x3f)		# VDL=-15V
 
         self.send_command(0x04)     # POWER ON
         epdconfig.delay_ms(100)
         self.ReadBusy()
 
         self.send_command(0X00)     # PANNEL SETTING
-        self.send_data(0x3F)        # KW-3f KWR-2F BWROTP-0f BWOTP-1f
+        self.send_data(0xBF)        # KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+
+        self.send_command(0x30)     # PLL setting
+        self.send_data(0x3c)        # 3A 100HZ   29 150Hz 39 200HZ  31 171HZ
 
         self.send_command(0x61)     # tres
-        self.send_data(0x03)        # source 800
+        self.send_data(0x03)		# source 800
         self.send_data(0x20)
-        self.send_data(0x01)        # gate 480
+        self.send_data(0x01)		# gate 480
         self.send_data(0xE0)
 
-        self.send_command(0X15)
-        self.send_data(0x00)
+        self.send_command(0X15)     # DUAL SPI
+        self.send_data(0x00)        # MM_EN, DUSPI_EN disabled
 
         self.send_command(0X50)     # VCOM AND DATA INTERVAL SETTING
         self.send_data(0x10)
@@ -217,51 +252,63 @@ class EPD:
 
         self.send_command(0X60)     # TCON SETTING
         self.send_data(0x22)
-
-        self.send_command(0x65)     # Resolution setting
-        self.send_data(0x00)
-        self.send_data(0x00)        # 800*480
-        self.send_data(0x00)
-        self.send_data(0x00)
-
-        self.SetLut(self.LUT_VCOM_7IN5_V2, self.LUT_WW_7IN5_V2, self.LUT_BW_7IN5_V2, self.LUT_WB_7IN5_V2, self.LUT_BB_7IN5_V2)
+        
+        #self.set_lut()
+        self.Partial_SetLut()
         # EPD hardware init end
         return 0
 
     def getbuffer(self, image):
-        img = image
-        imwidth, imheight = img.size
+        # logging.debug("bufsiz = ",int(self.width/8) * self.height)
+        buf = [0xFF] * (int(self.width/8) * self.height)
+        image_monocolor = image.convert('1')
+        imwidth, imheight = image_monocolor.size
+        pixels = image_monocolor.load()
+        # logging.debug("imwidth = %d, imheight = %d",imwidth,imheight)
         if(imwidth == self.width and imheight == self.height):
-            img = img.convert('1')
+            logging.debug("Vertical")
+            for y in range(imheight):
+                for x in range(imwidth):
+                    # Set the bits for the column of pixels at the current position.
+                    if pixels[x, y] == 0:
+                        buf[int((x + y * self.width) / 8)] &= ~(0x80 >> (x % 8))
         elif(imwidth == self.height and imheight == self.width):
-            # image has correct dimensions, but needs to be rotated
-            img = img.rotate(90, expand=True).convert('1')
-        else:
-            logger.warning("Wrong image dimensions: must be " + str(self.width) + "x" + str(self.height))
-            # return a blank buffer
-            return [0x00] * (int(self.width/8) * self.height)
-
-        buf = bytearray(img.tobytes('raw'))
-        # The bytes need to be inverted, because in the PIL world 0=black and 1=white, but
-        # in the e-paper world 0=white and 1=black.
-        for i in range(len(buf)):
-            buf[i] ^= 0xFF
+            logging.debug("Horizontal")
+            for y in range(imheight):
+                for x in range(imwidth):
+                    newx = y
+                    newy = self.height - x - 1
+                    if pixels[x, y] == 0:
+                        buf[int((newx + newy*self.width) / 8)] &= ~(0x80 >> (y % 8))
         return buf
-
+        
     def display(self, image):
+        #self.set_lut()
+        self.Partial_SetLut()
+        self.send_command(0x13)        #START TRASMISSION 2 (red)
+        for i in range(0, int(self.width * self.height / 8)):
+            self.send_data(~image[i]);
+        self.send_command(0x12)         #DISPLAY REFRESH
+        epdconfig.delay_ms(100)
+        self.ReadBusy()
+        
+    def display_window(self, image, height):
         self.send_command(0x13)
-        self.send_data2(image)
-
+        for i in range(0, int(self.width * height / 8)):
+            self.send_data(~image[i]);
         self.send_command(0x12)
         epdconfig.delay_ms(100)
         self.ReadBusy()
-
+        
     def Clear(self):
-        buf = [0x00] * (int(self.width/8) * self.height)
         self.send_command(0x10)
-        self.send_data2(buf)
+        for i in range(0, int(self.width * self.height / 8)):
+            self.send_data(0x00)
+            
         self.send_command(0x13)
-        self.send_data2(buf)
+        for i in range(0, int(self.width * self.height / 8)):
+            self.send_data(0x00)
+                
         self.send_command(0x12)
         epdconfig.delay_ms(100)
         self.ReadBusy()
@@ -273,7 +320,5 @@ class EPD:
         self.send_command(0x07) # DEEP_SLEEP
         self.send_data(0XA5)
         
-        epdconfig.delay_ms(2000)
         epdconfig.module_exit()
 ### END OF FILE ###
-
