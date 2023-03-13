@@ -74,8 +74,6 @@ try:
     # Put more text on the canvas
     draw.text(cursor, 'world', font = font_glossy, fill = 0)
 
-    # Rotate the image to put the connector at the top
-
     # Send the image to the screen
     screenshot(Himage)
     epd.display(epd.getbuffer(Himage))
