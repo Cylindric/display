@@ -1,0 +1,5 @@
+Pillow
+
+# if /sys/bus/platform/drivers/gpiomem-bcm2835
+RPi.GPIO
+spidev
