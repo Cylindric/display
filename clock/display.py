@@ -1,63 +1,38 @@
-import cherrypy
 import logging
-import os
-import random
-import string
-from jinja2 import Environment, FileSystemLoader
-from ClockController import Clock
+from lib.epd7in5_CYL import EPD
 
-logging.basicConfig(level=logging.DEBUG)
+class Display:
+    """
+    This class provides a simple interface to the attached e-Ink display.
+    """
 
-class HelloWorld(object):
-    
     def __init__(self):
-        self._environment = Environment(loader=FileSystemLoader("templates/"))
-        self.clock = Clock()
+        self._sleeping = False
+        self._epd = EPD()
 
-    @cherrypy.expose
-    def start(self):
-        self.clock.start()
-        return "started"
-
-    @cherrypy.expose
-    def stop(self):
-        self.clock.stop()
-        return "stopped"
-
-    @cherrypy.expose
-    def index(self):
-        template = self._environment.get_template("index.html")
-        return template.render(
-            mode=self.clock.get_state() 
-        )
-
-    @cherrypy.expose
-    def generate(self):
-        return ''.join(random.sample(string.hexdigits, 8))
+    def init(self):
+        logging.info("Initialising display")
+        self._epd.init()
+        self._epd.clear()
     
-    @cherrypy.expose
-    def control(self, action):
-        return action
+    def size(self):
+        return self._epd.width, self._epd.height
 
+    def middle(self):
+        return self._epd.width//2, self._epd.height//2
 
-if __name__ == '__main__':
-    conf = {
-        'global': {
-            'engine.autoreload.on': True
-        },
-        '/': {
-            'tools.staticdir.root': os.path.abspath(os.getcwd())
-        },
-        '/static': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': './public'
-        }
-    }
+    def display(self, image):
+        if self._sleeping:
+            self.init()
+        self._epd.display(self._epd.getbuffer(image))
 
-    H = HelloWorld()
-    H.start()
-    try:
-        cherrypy.engine.subscribe('stop', H.stop)
-        cherrypy.quickstart(H, '/', config=conf)
-    except KeyboardInterrupt:
-        H.stop()
+    def sleep(self):
+        logging.info("Putting display to sleep")
+        self._epd.sleep()
+        self._sleeping = True
+    
+    def stop(self):
+        logging.info("Shutting down display")
+        self._epd.init()
+        self._epd.clear()
+        self._epd.sleep()
