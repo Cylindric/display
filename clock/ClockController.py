@@ -1,23 +1,23 @@
 import datetime
 import logging
-import os
-import sched
-import sys
-import time
-import traceback
 from DisplayController import Display
 from CanvasController import Canvas
+from apscheduler.schedulers.background import BackgroundScheduler
+
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
 class Clock():
-    mode = "realtime"
-    s = None
-    d = None
-    c = None
 
     def __init__(self):
-        self.s = sched.scheduler(time.time, time.sleep)
-        self.d = Display()
-        self.c = Canvas(self.d.size(), "origin_tech", 300)
+        self._mode = "stopped"
+        self._newsched = BackgroundScheduler()
+        self._display = Display()
+        self._canvas = Canvas(self._display.size(), "origin_tech", 300)
+        self._last_update = datetime.datetime(1977, 4, 20)
+        self._next_update = datetime.datetime(1977, 4, 20)
+
+    def get_state(self):
+        return self._mode
 
     def hourName(self, hour) :
         if hour == 1 : return 'one'
@@ -57,60 +57,69 @@ class Clock():
         rounding = (seconds+roundTo/2) // roundTo * roundTo
         return dt + datetime.timedelta(0,rounding-seconds,-dt.microsecond)
 
-    def tick(self, s=None):
+    def tick(self):
         now = datetime.datetime.now()
         logging.info(f"Tick {now}")
         t = now.time()
 
         # What mode we're in depends on the time of day
-        if (t >= datetime.time(17,0)) or (t <= datetime.time(7,0)):
-            if self.mode != "vague": logging.info("Switching mode to Vague")
-            self.mode = "vague"
+        if (t >= datetime.time(17,0)) or (t <= datetime.time(9,0)):
+            if self._mode != "vague": logging.info("Switching mode to Vague")
+            self._mode = "vague"
         else:
-            if self.mode != "realtime": logging.info("Switching mode to RealTime")
-            self.mode = "realtime"
+            if self._mode != "realtime": logging.info("Switching mode to RealTime")
+            self._mode = "realtime"
+
+        # If we're not due to do anthing, don't do anything
+        if self._next_update > now:
+            logging.debug(f"Nothing to do until {self._next_update}")
+            return False
 
         # How often we re-draw depends on what mode we're in
-        if self.mode == "vague":
+        if self._mode == "vague":
             # Vague mode updates the screen every 15 minutes
             delta = datetime.timedelta(minutes=15)
-            next_refresh = self.roundTime(now + delta, roundTo=15*60)
-            logging.info(f"Next vague update is at {next_refresh}")
-            self.s.enterabs(next_refresh.timestamp(), 1, self.tick, argument=(s,))
+            self._next_update = self.roundTime(now + delta, roundTo=15*60)
 
-        if self.mode == "realtime":
+        if self._mode == "realtime":
             # Realtime mode updates the screen every minute
             delta = datetime.timedelta(minutes=1)
-            next_refresh = self.roundTime(now + delta, roundTo=60)
-        
-            logging.info(f"Next realtime update is at {next_refresh}")
-            self.s.enterabs(next_refresh.timestamp(), 1, self.tick, argument=(s,))
+            self._next_update = self.roundTime(now + delta, roundTo=60)
 
-        if self.mode == "testing":
+        if self._mode == "testing":
             # Testing mode updates the screen more frequently
             delta = datetime.timedelta(seconds=15)
-            next_refresh = self.roundTime(now + delta, roundTo=15)
-        
-            logging.info(f"Next testing update is at {next_refresh}")
-            self.s.enterabs(next_refresh.timestamp(), 1, self.tick, argument=(s,))
+            self._next_update = self.roundTime(now + delta, roundTo=15)
+
+        logging.info(f"Next {self._mode} update is at {self._next_update}")
 
         logging.info(f"Updating display with current time {now}")
-        self.c.blank()
-        if self.mode == "vague":
-            self.c.display_time(f"{hourName(now.hour)}something", self.d.middle(), style="scaled_text")
-            self.d.display(self.c.get_image())
-        if self.mode == "realtime":
-            self.c.display_time(now.strftime("%H:%M"), self.d.middle(), style="scaled_text")
-            self.d.display(self.c.get_image())
-        if self.mode == "testing":
-            self.c.display_time(f"{hourName(now.hour)}something", self.d.middle(), style="scaled_text")
-            self.d.display(self.c.get_image())
-        self.c.screenshot("html/latest.jpg")
+        self._canvas.blank()
+        if self._mode == "vague":
+            self._canvas.display_time(f"{self.hourName(now.hour)}something", self._display.middle(), style="scaled_text")
+            self._display.display(self._canvas.get_image())
+        if self._mode == "realtime":
+            self._canvas.display_time(now.strftime("%H:%M"), self._display.middle(), style="scaled_text")
+            self._display.display(self._canvas.get_image())
+        if self._mode == "testing":
+            self._canvas.display_time(f"{self.hourName(now.hour)}something", self._display.middle(), style="scaled_text")
+            self._display.display(self._canvas.get_image())
+        self._canvas.screenshot("public/img/latest.png")
+
+        self._last_update = now
 
     def start(self):
         # Setup the scheduler
-        self.c.auto_flip = True
-        self.d.init()
+        self._mode = "starting"
+        self._canvas.auto_flip = True
+        self._display.init()
+        self._newsched.start()
+        self._newsched.add_job(self.tick, 'interval', seconds=5, max_instances=1)
 
-        self.tick(self.s)
-        self.s.run()
+    def stop(self):
+        logging.info("Stopping Clock Controller...")
+        self._newsched.shutdown(wait=True)
+        self._display.stop()
+        self._mode = "stopped"
+        logging.info("Clock Controller stopped.")
+

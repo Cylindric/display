@@ -328,7 +328,7 @@ class EPD:
         epdconfig.delay_ms(100)
         self.ReadBusy()
         
-    def Clear(self):
+    def clear(self):
         self.send_command(CMD_DISPLAY_START_TRANSMIT_1)
         for i in range(0, int(self.width * self.height / 8)):
             self.send_data(0x00)
