@@ -1,0 +1,15 @@
+[Unit]
+Description=e-Ink Display
+Documentation=https://github.com/Cylindric/display
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/mark/dev/display/clock
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/home/mark/.virtualenvs/display/bin/python display.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

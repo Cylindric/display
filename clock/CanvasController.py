@@ -15,6 +15,9 @@ class Canvas:
         self.image = Image.new('L', xy, 255)  # 255: clear the frame
         self.canvas = ImageDraw.Draw(self.image)
 
+    def screenshot(self, filename):
+        self.image.save(filename)
+
     def get_image(self):
         if self.auto_flip:
             return self.image.rotate(180)
