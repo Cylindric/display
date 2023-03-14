@@ -214,12 +214,40 @@ class SunriseX3:
         self.GPIO.cleanup([self.RST_PIN, self.DC_PIN, self.CS_PIN, self.BUSY_PIN])
 
 
+class Dummy:
+    def __init__(self):
+        pass
+
+    def digital_write(self, pin, value):
+        pass
+
+    def digital_read(self, pin):
+        return 0
+
+    def delay_ms(self, delaytime):
+        time.sleep(delaytime / 1000.0)
+
+    def spi_writebyte(self, data):
+        pass
+
+    def spi_writebyte2(self, data):
+        pass
+
+    def module_init(self):
+        return 0
+
+    def module_exit(self):
+        logger.debug("module offline")
+
+
 if os.path.exists('/sys/bus/platform/drivers/gpiomem-bcm2835'):
     implementation = RaspberryPi()
-elif os.path.exists('/sys/bus/platform/drivers/gpio-x3'):
-    implementation = SunriseX3()
+# elif os.path.exists('/sys/bus/platform/drivers/gpio-x3'):
+#     implementation = SunriseX3()
+# else:
+#     implementation = JetsonNano()
 else:
-    implementation = JetsonNano()
+    implementation = Dummy()
 
 for func in [x for x in dir(implementation) if not x.startswith('_')]:
     setattr(sys.modules[__name__], func, getattr(implementation, func))

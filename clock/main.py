@@ -1,3 +1,4 @@
+"""This is the main entrypoint to the application"""
 import logging
 import os
 import cherrypy
@@ -19,7 +20,7 @@ if __name__ == '__main__':
         }
     }
 
-    web_server = Web()
+    web_server = Web(connected=False)
     try:
         web_server.start()
         cherrypy.engine.subscribe('stop', web_server.stop)

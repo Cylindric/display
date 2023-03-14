@@ -1,8 +1,9 @@
+"""This module help to manage the clock component"""
 import datetime
 import logging
+from apscheduler.schedulers.background import BackgroundScheduler
 from display import Display
 from canvas import Canvas
-from apscheduler.schedulers.background import BackgroundScheduler
 
 logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
@@ -11,10 +12,16 @@ class Clock():
     This class draws a variety of clocks depending on the time of day.
     """
 
-    def __init__(self):
+    def __init__(self, connected=True):
+        """Instantiates the Clock class
+
+        Args:
+            connected (bool, optional): set to false to run without an attached screen.
+                                        Defaults to True.
+        """
         self._mode = "stopped"
         self._newsched = BackgroundScheduler()
-        self._display = Display()
+        self._display = Display(connected=connected)
         self._canvas = Canvas(self._display.size(), "origin_tech", 300)
         self._last_update = datetime.datetime(1977, 4, 20)
         self._next_update = datetime.datetime(1977, 4, 20)

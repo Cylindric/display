@@ -11,3 +11,16 @@ Pillow
 # if /sys/bus/platform/drivers/gpiomem-bcm2835:
 RPi.GPIO
 spidev
+
+# Sonarr Data
+requests
+#aiopyarr
+#aiohttp>=3.6.1,<4.0
+#aresponses>=2.1.4
+#black>=21.11b1
+#ciso8601>=2.2.0
+#isort>=5.10.1
+#flake8>=4.0.1
+#flake8-docstrings>=1.6.0
+mypy>=0.910
+##orjson>=3.7.11

@@ -1,0 +1,8 @@
+digraph dot {
+
+    main -> web
+    web -> dashboard
+    dashboard -> clock
+    clock -> display
+    clock -> canvas
+}
