@@ -14,6 +14,6 @@ python3 -m build
 
 # Publish
 ```bash
-python3 -m twine upload --repository testpypi dist/*
+python3 -m twine upload --skip-existing --repository testpypi dist/*
 python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps dashboard
 ```
