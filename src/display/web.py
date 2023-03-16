@@ -1,4 +1,5 @@
 """This module provides management for the Web interface"""
+import os
 import cherrypy
 from jinja2 import Environment, FileSystemLoader
 from display.dashboard import Dashboard
@@ -14,7 +15,7 @@ class Web():
             connected (bool, optional): set to false to run without an attached screen.
                                         Defaults to True.
         """
-        self._environment = Environment(loader=FileSystemLoader("templates/"))
+        self._environment = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "templates")))
         self._dashboard = Dashboard(connected=connected, screenshot_path=screenshot_path)
 
     @cherrypy.expose

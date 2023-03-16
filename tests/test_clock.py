@@ -10,19 +10,6 @@ def test_init():
     c = Clock((200,200))
     assert c.get_state() == "stopped"
 
-def test_start():
-    c = Clock((200,200))
-    assert c.get_state() == "stopped"
-    c.start()
-    assert c.get_state() == "starting"
-
-def test_stop():
-    c = Clock((200,200))
-    c.start()
-    assert c.get_state() == "starting"
-    c.stop()
-    assert c.get_state() == "stopped"
-
 def test_get_canvas_returns_image():
     c = Clock((200, 200))
     i = c.get_canvas()

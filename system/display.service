@@ -6,9 +6,10 @@ After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/mark/dev/display/clock
+WorkingDirectory=/opt/display/src
 ExecReload=/bin/kill -HUP $MAINPID
-ExecStart=/home/mark/.virtualenvs/display/bin/python display.py
+ExecStart=/usr/local/share/.virtualenvs/display/bin/python -m display.runner
+EnvironmentFile=/etc/display/display.env
 Restart=always
 
 [Install]

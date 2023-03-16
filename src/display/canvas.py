@@ -5,10 +5,19 @@ from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
+COLOR_MODE="RGB"
+if COLOR_MODE=="RGB":
+    TEXT=(0, 0, 0)
+    BACKGROUND=(255, 255, 255)
+else:
+    TEXT=0
+    BACKGROUND=255
+
 class Canvas:
     """
     This class provides an interface to the the drawing tools needed for the display.
     """
+    _boxes = False
 
     def __init__(self, screen_size, font=None, font_size=300):
         logging.basicConfig(level=logging.DEBUG)
@@ -22,28 +31,18 @@ class Canvas:
         self._margin_right = 0
         self._width = screen_size[0] - self._margin_left - self._margin_right
         self._height = screen_size[1]
-        self._image = Image.new('L', screen_size, 255)  # 255: clear the frame
+        self._image = Image.new(COLOR_MODE, screen_size, BACKGROUND)
         self._canvas = ImageDraw.Draw(self._image)
 
-    def screenshot(self, filename):
+    def screenshot(self, filename, mode=COLOR_MODE):
         """
         Saves a screen-shot of the current Image to the specified filename.
-        If the filename looks like a PNG, it will replace white pixels with 
-        transparent ones.
         """
+        img = self._image.convert(mode)
         if filename.endswith(".png"):
-            img = self._image.convert('RGBA')
-            datas = img.getdata()
-            new_data = []
-            for item in datas:
-                if item[0] == 255 and item[1] == 255 and item[2] == 255:
-                    new_data.append((255, 255, 255, 0))
-                else:
-                    new_data.append(item)
-            img.putdata(new_data)
             img.save(filename)
         elif filename.endswith(".jpg"):
-            self._image.save(filename)
+            img.save(filename)
         else:
             raise RuntimeError("Invalid filename, must be either *.png or *.jpg")
 
@@ -57,8 +56,7 @@ class Canvas:
 
     def blank(self):
         """Blanks the whole current canvas, ignoring any margins set."""
-
-        self._canvas.rectangle((0, 0, self._full_size[0], self._full_size[1]), fill=255) # blank
+        self._canvas.rectangle((0, 0, self._full_size[0], self._full_size[1]), fill=BACKGROUND) # blank
 
     def create_text_object(self, text, width=0, height=0) -> Image:
         """Creates a new Image object with the specified text, scaled
@@ -88,14 +86,20 @@ class Canvas:
             scale = width / text_width
         else:
             scale = height / text_height
+
         new_width = int(text_width * scale)
         new_height = int(text_height * scale)
 
+        # print(f"\ntext={text_width}x{text_height} target={width}x{height} scale={scale} new={new_width}x{new_height}")
+
         # Create a new image the size of the text, and put the text in the middle of it
         logging.debug("Creating new text box %sx%s.", text_width, text_height)
-        img = Image.new("L", (text_width, text_height), "white")
+        img = Image.new(COLOR_MODE, (text_width, text_height), color=BACKGROUND)
         draw = ImageDraw.Draw(img)
-        draw.text((0, 0), text, anchor='la', fill="black", font=self._font)
+        draw.text((0, 0), text, anchor='la', fill=TEXT, font=self._font)
+
+        if self._boxes:
+            draw.rectangle([(0, 0), (text_width, text_height)], outline=TEXT, width=2)
 
         # Next resize the text to the desired dimentions
         logging.debug("Resizing text box to %sx%s.", new_width, new_height)
@@ -103,25 +107,31 @@ class Canvas:
 
         return img
 
-    def draw_text(self, text, width, position=(0,0), anchor="baseline"):
-        glyph = self.create_text_object(text, width)
-
+    def place_sprite(self, sprite, position, anchor="bottom"):
         if anchor == "top-left":
             pass
-        elif anchor == "baseline":
+        elif anchor == "bottom":
             position = (
                 position[0],
-                position[1] - glyph.height
+                position[1] - sprite.height
             )
         elif anchor == "centre":
             position = (
-                position[0] - (glyph.width//2),
-                position[1] - (glyph.height//2)
+                position[0] - (sprite.width//2),
+                position[1] - (sprite.height//2)
             )
 
-        # Place the text at the requested position
-        self._image.paste(glyph, position)
+        # Place the sprite at the requested position
+        self._image.paste(sprite, position)
 
+    def draw_text(self, text, width, position=(0,0), anchor="baseline"):
+        glyph = self.create_text_object(text, width=width)
+        if anchor == "baseline":
+            anchor = "bottom"
+
+        # Place the text at the requested position
+        self.place_sprite(glyph, position, anchor)
+ 
     def paste(self, img, position=(0,0)):
         """Paste the supplied Image or Canvas into this Canvas.
 

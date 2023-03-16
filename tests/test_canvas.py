@@ -20,9 +20,6 @@ def test_screenshot_creates_file(tmp_path):
 
     assert len(list(tmp_path.iterdir())) == 1
 
-    st_size = path.stat().st_size
-    assert st_size == 312 # the expected size of a 100x100 blank PNG
-
 def test_get_image_returns_image():
     c = Canvas((100, 100))
     i = c.get_image()

@@ -1,6 +1,6 @@
 """This module helps to manage the attached e-Ink display"""
 import logging
-from display.epd import EPD
+from display.epd_orig import EPD
 
 class Screen:
     """
@@ -33,6 +33,13 @@ class Screen:
         if not self._connected:
             return
         self._epd.init()
+        self._epd.clear()
+
+    def clear(self):
+        """Clears the screen"""
+        logging.info("Clearing display")
+        if not self._connected:
+            return
         self._epd.clear()
 
     def size(self) -> tuple[int, int]:

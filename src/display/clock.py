@@ -102,7 +102,7 @@ class Clock():
 
         # If we're not due to do anthing, don't do anything
         if self._next_update > now:
-            logger.debug("Nothing to do until %s", self._next_update)
+            # logger.debug("Nothing to do until %s", self._next_update)
             return False
 
         # How often we re-draw depends on what mode we're in
@@ -142,17 +142,3 @@ class Clock():
             width=self._size[0],
             position=(self._size[0]//2, self._size[1]//2),
             anchor="centre")
-
-    def start(self):
-        """
-        Starts the main Clock controller, and sets up the scheduler for updates.
-        """
-        self._mode = "starting"
-
-    def stop(self):
-        """
-        Stops the main Clock controller, turns off the screen, and stops any pending schedules.
-        """
-        logger.info("Stopping Clock Controller...")
-        self._mode = "stopped"
-        logger.info("Clock Controller stopped.")

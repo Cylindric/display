@@ -22,7 +22,7 @@ if __name__ == '__main__':
     }
 
     ss_path = os.path.join(os.path.dirname(__file__), "public", "img")
-    web_server = Web(connected=False, screenshot_path=ss_path)
+    web_server = Web(connected=True, screenshot_path=ss_path)
     try:
         web_server.start()
         cherrypy.engine.subscribe('stop', web_server.stop)
