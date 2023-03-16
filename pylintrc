@@ -1,2 +1,0 @@
-[master]
-ignore-patterns=(.)*_test\.py,test_(.)*\.py
