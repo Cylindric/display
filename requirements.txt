@@ -1,0 +1,6 @@
+Pillow
+RPi.GPIO
+spidev
+numpy
+
+# sudo apt-get -y install libatlas-base-dev
