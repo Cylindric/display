@@ -60,7 +60,7 @@ class Tv:
         logger.info("Got %s episodes", len(calendar))
         self._last_update = datetime.datetime.now()
         return calendar
-    
+
     def render(self):
         logger.info("Rendering data")
         logger.info(self._calendar_data)

@@ -52,7 +52,7 @@ class Dashboard:
             canvas = Canvas(self._display.size())
             canvas.auto_flip = True
             canvas.paste(self._clock.get_canvas().get_image())
-            canvas.paste(self._tv.get_canvas().get_image(), position=(0, self._display.size()[1]-100))
+            # canvas.paste(self._tv.get_canvas().get_image(), position=(0, self._display.size()[1]-100))
             # logger.debug(canvas.get_image().getcolors())
             self._display.clear()
             self._display.display(canvas.get_image())

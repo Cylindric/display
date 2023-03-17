@@ -1,11 +1,14 @@
 """This module helps to manage the attached e-Ink display"""
 import logging
+from PIL import Image
 from display.epd_orig import EPD
 
 class Screen:
     """
     This class provides a simple interface to the attached e-Ink display.
     """
+
+    _bw_image_fix = False
 
     def __init__(self, connected=True):
         """Instantiates the Display class
@@ -66,8 +69,13 @@ class Screen:
         """
         if not self._connected:
             return
+
+        if self._bw_image_fix:
+            image = self._fix_image_colours(image)
+
         if self._sleeping:
             self.init()
+
         self._epd.display(self._epd.getbuffer(image))
 
     def sleep(self):
@@ -86,3 +94,17 @@ class Screen:
         self._epd.init()
         self._epd.clear()
         self._epd.sleep()
+
+    def _fix_image_colours(self, image) -> Image:
+        """Creates a new image where all pixels are either 0 or 1. 
+        Any pixel with a colour value greater than 127 becomes 1."""
+
+        newdata = []
+        for colour in image.convert('1').getdata():
+            if colour > 127:
+                newdata.append(1)
+            else:
+                newdata.append(0)
+        new_image = Image.new(image.mode, image.size)
+        new_image.putdata(newdata)
+        return new_image
